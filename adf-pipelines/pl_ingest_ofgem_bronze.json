@@ -1,0 +1,66 @@
+{
+  "name": "pl_ingest_ofgem_bronze",
+  "properties": {
+    "description": "Ingests daily Ofgem grid metrics CSV into ADLS Gen2 bronze container. Partitioned by ingest_date. No transformation — raw data preserved (medallion bronze principle). GDPR: no customer PII at this stage.",
+    "activities": [
+      {
+        "name": "Copy_Ofgem_CSV_to_Bronze",
+        "type": "Copy",
+        "description": "Copy Ofgem CSV to bronze/ofgem/ingest_date=YYYY-MM-DD/",
+        "policy": { "timeout": "01:00:00", "retry": 3, "retryIntervalInSeconds": 60 },
+        "typeProperties": {
+          "source": {
+            "type": "DelimitedTextSource",
+            "storeSettings": { "type": "HttpReadSettings", "requestMethod": "GET" }
+          },
+          "sink": {
+            "type": "DelimitedTextSink",
+            "storeSettings": { "type": "AzureBlobFSWriteSettings" }
+          },
+          "enableStaging": false
+        },
+        "inputs": [{ "referenceName": "ds_http_ofgem_csv", "type": "DatasetReference" }],
+        "outputs": [{ "referenceName": "ds_adls_bronze_csv", "type": "DatasetReference",
+          "parameters": {
+            "folder_path": { "value": "@concat('ofgem/ingest_date=', formatDateTime(pipeline().parameters.ingest_date, 'yyyy-MM-dd'))", "type": "Expression" },
+            "file_name": { "value": "@concat('ofgem_grid_metrics_', formatDateTime(pipeline().parameters.ingest_date, 'yyyyMMdd'), '.csv')", "type": "Expression" }
+          }
+        }]
+      },
+      {
+        "name": "Trigger_Bronze_to_Silver_Notebook",
+        "type": "DatabricksNotebook",
+        "description": "Run PySpark notebook to cleanse bronze and write silver Delta table",
+        "dependsOn": [{ "activity": "Copy_Ofgem_CSV_to_Bronze", "dependencyConditions": ["Succeeded"] }],
+        "linkedServiceName": { "referenceName": "ls_databricks_energyzero", "type": "LinkedServiceReference" },
+        "typeProperties": {
+          "notebookPath": "/EnergyZero/01_bronze_to_silver",
+          "baseParameters": {
+            "ingest_date": { "value": "@formatDateTime(pipeline().parameters.ingest_date, 'yyyy-MM-dd')", "type": "Expression" },
+            "source": "ofgem",
+            "environment": "prod"
+          }
+        }
+      },
+      {
+        "name": "Trigger_Silver_to_Gold_Notebook",
+        "type": "DatabricksNotebook",
+        "description": "Run PySpark notebook to aggregate silver into gold Net Zero KPI tables",
+        "dependsOn": [{ "activity": "Trigger_Bronze_to_Silver_Notebook", "dependencyConditions": ["Succeeded"] }],
+        "linkedServiceName": { "referenceName": "ls_databricks_energyzero", "type": "LinkedServiceReference" },
+        "typeProperties": {
+          "notebookPath": "/EnergyZero/02_silver_to_gold",
+          "baseParameters": {
+            "ingest_date": { "value": "@formatDateTime(pipeline().parameters.ingest_date, 'yyyy-MM-dd')", "type": "Expression" },
+            "environment": "prod"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "ingest_date": { "type": "string", "defaultValue": "@utcNow()" }
+    },
+    "annotations": ["bronze", "ofgem", "ingestion", "gdpr-compliant"],
+    "folder": { "name": "01_Bronze_Ingestion" }
+  }
+}
