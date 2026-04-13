@@ -1,7 +1,7 @@
 # EnergyZero – Azure Data Engineering Platform (Terraform IaC)
 
 ![Terraform CI](EnergyZero-Terraform/docs/img/cicd_pipeline.png)
-![Python Tests](https://github.com/narendrakalisetti/EnergyZero-Terraform/actions/workflows/terraform.yml/badge.svg)
+![Python Tests](EnergyZero-Terraform/docs/img/security_compliance.png)
 ![Terraform](https://img.shields.io/badge/Terraform-1.9-purple)
 ![AzureRM](https://img.shields.io/badge/AzureRM-4.x-blue)
 ![Azure](https://img.shields.io/badge/Azure-UK%20South-blue)
