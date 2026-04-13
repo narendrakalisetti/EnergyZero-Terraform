@@ -291,13 +291,13 @@ Merge to main → terraform apply
 
 ## Challenges & Lessons Learned
 
-See [`docs/CHALLENGES.md`](docs/CHALLENGES.md) — covers 7 real problems including RBAC propagation delays, Key Vault soft-delete conflicts, AzureRM 4.x breaking changes, and Delta OPTIMIZE permission requirements.
+See [`docs/CHALLENGES.md`](EnergyZero-Terraform/docs) — covers 7 real problems including RBAC propagation delays, Key Vault soft-delete conflicts, AzureRM 4.x breaking changes, and Delta OPTIMIZE permission requirements.
 
 ---
 
 ## Cost Estimate
 
-See [`docs/COST_ESTIMATE.md`](docs/COST_ESTIMATE.md) — accurate breakdown totalling ~£518/month for production, ~£59/month for dev.
+See [`docs/COST_ESTIMATE.md`](EnergyZero-Terraform/docs) — accurate breakdown totalling ~£518/month for production, ~£59/month for dev.
 
 ---
 
